@@ -43,7 +43,7 @@ end
 
 class Zinc < Sinatra::Base
   set :root, ROOT
-	set :views, APP_VIEWS
+  set :views, APP_VIEWS
   set :raise_errors, false
   set :show_exceptions, false
   configure :development, :test do
@@ -57,7 +57,7 @@ class Zinc < Sinatra::Base
     end
      alias_method :h, :escape_html		
   end
-	def process
+  def process
     klass = Controller.find(@params[:controller])
     error 404 if klass.nil?
     begin
@@ -77,8 +77,8 @@ class Zinc < Sinatra::Base
     end
   end
 
-	get '/:controller/:action/*' do self.process end
-	post '/:controller/:action/*' do self.process end
+  get '/:controller/:action/*' do self.process end
+  post '/:controller/:action/*' do self.process end
 end
 
 # load conf,models and controllers at the end, so we can add more routes
