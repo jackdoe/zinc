@@ -13,7 +13,11 @@ class TestController < Controller
   def get_list(*unused)
     @output = "hello world"
   end
+  def get_exception(*unused)
+    raise "oops"
+  end
 end
+
 class Zinc
   get '/custom' do
     "custom"
@@ -40,6 +44,7 @@ class RouteTest < Test::Unit::TestCase
   end
   def test_it
     get_and_compare('/',404)
+    get_and_compare('/test/exception/',500)
     get_and_compare('/test/return/5',"5")
     get_and_compare('/test/return/5',"5",{post: true})
     get_and_compare('/test/list/',"hello world")
