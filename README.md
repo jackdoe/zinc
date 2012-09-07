@@ -1,6 +1,6 @@
-## zinc
-
+## zinc (require sinatra)
 ```
+$ gem install sinatra thin
 $ git clone https://github.com/jackdoe/zinc.git
 $ cd zinc
 $ ruby zinc.rb generate post
