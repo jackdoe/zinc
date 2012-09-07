@@ -37,7 +37,7 @@ class Controller
     return @zinc.erb File.join(self.class.to_s.downcase.gsub(/controller$/,''),@action).to_sym, {:locals  => {:c => self}, :layout => @layout}
   end
   def Controller.find(name)
-    return Kernel.const_get(name.to_s.sanitize.capitalize.gsub(/$/,'Controller')) rescue nil
+    return Kernel.const_get(name.to_s.sanitize.capitalize.gsub(/$/,'Controller')) 
   end
 end
 
@@ -82,7 +82,7 @@ class Zinc < Sinatra::Base
 end
 
 # load conf,models and controllers at the end, so we can add more routes
-Dir.glob(File.join(APP,"{#{APP_CONFIG},#{APP_MODELS},#{APP_CONTROLLERS}}","*.rb")) { |f| require f }
+Dir.glob(File.join("{#{APP_CONFIG},#{APP_MODELS},#{APP_CONTROLLERS}}","*.rb")) { |f| require f }
 
 
 # simple directory structure generator

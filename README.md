@@ -1,7 +1,13 @@
 ## zinc
 
 ```
-git clone https://github.com/jackdoe/zinc.git
+$ git clone https://github.com/jackdoe/zinc.git
+$ cd zinc
+$ ruby zinc.rb generate post
+$ vim app/c/PostController.rb # add 'def get_show(id); end' inside PostController class
+$ vim app/v/post/show.erb # add bazinga! # or echo 'bazinga!' > app/v/post/show.erb
+$ thin start -p 3456
+$ curl http://localhost:3456/post/show/5
 ```
 
 default routes `(GET|POST) /controller/action/*`,
