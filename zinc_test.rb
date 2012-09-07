@@ -19,7 +19,7 @@ class TestController < Controller
 end
 
 class Zinc
-  get '/custom' do
+  get '/very_strange_and_long_route' do
     "custom"
   end
 end
@@ -48,6 +48,9 @@ class RouteTest < Test::Unit::TestCase
     get_and_compare('/test/return/5',"5")
     get_and_compare('/test/return/5',"5",{post: true})
     get_and_compare('/test/list/',"hello world")
-    get_and_compare('/custom',"custom")
+    get_and_compare('/very_strange_and_long_route',"custom")
   end
 end
+
+# load application's tests
+Dir.glob(File.join(APP_TESTS,"*","*.rb")) { |f| require f }

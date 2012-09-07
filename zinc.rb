@@ -3,13 +3,14 @@ require 'cgi'
 ROOT = File.dirname(__FILE__)
 APP = File.join(ROOT,"app")
 APP_VIEWS = File.join(APP,"v")
+APP_TESTS = File.join(APP,"test")
 APP_MODELS = File.join(APP,"m")
 APP_CONTROLLERS = File.join(APP,"c")
 APP_CONFIG = File.join(APP,"conf")
 
 class String
   def sanitize
-    self.gsub(/[^a-zA-Z0-9]/,'')
+    self.gsub(/[^a-zA-Z0-9]_/,'')
   end
   def escape
     CGI::escapeHTML(self)
@@ -92,12 +93,16 @@ if ARGV.count > 0 && ARGV.shift =~ /^(g|generate)$/
   write = lambda do |file,s|
     File.open(file, 'w') {|f| f.write(s) } and puts "GENERATE(file):#{file}" unless File.exists?(file)
   end
-  [APP,APP_MODELS,APP_CONTROLLERS,APP_VIEWS,APP_CONFIG].each { |x| mkdir.call(x) }
+  [APP,APP_MODELS,APP_CONTROLLERS,APP_VIEWS,APP_CONFIG,APP_TESTS].each { |x| mkdir.call(x) }
   ARGV.each do |x|
     x = x.sanitize.downcase.capitalize
     c = "#{x}Controller"
-    mkdir.call File.join(APP_VIEWS,"#{x.downcase}")
+    dir = x.downcase
+    mkdir.call File.join(APP_VIEWS,dir)
+    mkdir.call File.join(APP_TESTS,dir)
     write.call(File.join(APP_MODELS,"#{x}.rb"), "class #{x}\nend\n")
     write.call(File.join(APP_CONTROLLERS,"#{c}.rb"), "class #{c} < Controller\nend\n")
+    write.call(File.join(APP_TESTS,dir,"#{c}.rb"), "class #{c}Test < Test::Unit::TestCase\n  include Rack::Test::Methods\n  def app\n    Zinc\n  end\nend\n")
+    write.call(File.join(APP_TESTS,dir,"#{x}.rb"), "class #{x}Test < Test::Unit::TestCase\nend\n")    
   end
 end
