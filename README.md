@@ -22,3 +22,18 @@ app/m/ # models
 app/v/ #views
 app/c/ #conrollers
 ```
+
+## example app/conf/main.rb
+```
+require 'active_record'
+ActiveRecord::Base.establish_connection(:adapter => 'sqlite3',:database => "#{APP}/database.sqlite3")
+# example of adding default controller/action to custom route
+
+class Zinc
+	get '/' do
+		params[:controller] = 'post'
+		params[:action] = 'list'
+		self.process
+	end
+end
+```
