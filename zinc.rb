@@ -82,27 +82,22 @@ class Zinc < Sinatra::Base
 end
 
 # load conf,models and controllers at the end, so we can add more routes
-Dir.glob(File.join("{#{APP_CONFIG},#{APP_MODELS},#{APP_CONTROLLERS}}","*.rb")) { |f| require f }
-
+Dir.glob(File.join("{#{[APP_CONFIG,APP_MODELS,APP_CONTROLLERS].join(',')}}","*.rb")) { |f| require f }
 
 # simple directory structure generator
-if ARGV.count > 0
+if ARGV.count > 0 && ARGV.shift =~ /^(g|generate)$/
   mkdir = lambda do |name|
     Dir.mkdir(name) and puts "CREATE(directory): #{name}" unless Dir.exists?(name)
   end
   write = lambda do |file,s|
     File.open(file, 'w') {|f| f.write(s) } and puts "GENERATE(file):#{file}" unless File.exists?(file)
   end
-  if ARGV.shift =~ /^(g|generate)$/
-    [APP,APP_MODELS,APP_CONTROLLERS,APP_VIEWS,APP_CONFIG].each { |x| mkdir.call(x) }
-    ARGV.each do |x|
-      x = x.sanitize.downcase.capitalize
-      c = "#{x}Controller"
-      mkdir.call File.join(APP_VIEWS,"#{x.downcase}")
-      write.call(File.join(APP_MODELS,"#{x}.rb"), "class #{x}\nend\n")
-      write.call(File.join(APP_CONTROLLERS,"#{c}.rb"), "class #{c} < Controller\nend\n")
-    end
-  else
-    puts "ruby zinc.rb generate post category tag"
+  [APP,APP_MODELS,APP_CONTROLLERS,APP_VIEWS,APP_CONFIG].each { |x| mkdir.call(x) }
+  ARGV.each do |x|
+    x = x.sanitize.downcase.capitalize
+    c = "#{x}Controller"
+    mkdir.call File.join(APP_VIEWS,"#{x.downcase}")
+    write.call(File.join(APP_MODELS,"#{x}.rb"), "class #{x}\nend\n")
+    write.call(File.join(APP_CONTROLLERS,"#{c}.rb"), "class #{c} < Controller\nend\n")
   end
 end
