@@ -37,3 +37,20 @@ class Zinc
 	end
 end
 ```
+
+or split `main.rb` into `db.rb` and `routes.rb`
+
+```
+db.rb:
+require 'active_record'
+ActiveRecord::Base.establish_connection(:adapter => 'sqlite3',:database => "#{APP}/database.sqlite3")
+
+routes.rb:
+class Zinc
+	get '/' do
+		params[:controller] = 'post'
+		params[:action] = 'list'
+		self.process
+	end
+end
+```
