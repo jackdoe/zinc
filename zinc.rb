@@ -43,7 +43,7 @@ class Controller
 end
 
 class Zinc < Sinatra::Base
-  set :root, ROOT
+  set :root, APP
   set :views, APP_VIEWS
   set :raise_errors, false
   set :show_exceptions, false
