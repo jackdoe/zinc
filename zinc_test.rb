@@ -24,6 +24,8 @@ class Zinc
   end
 end
 
+Dir.glob(File.join(PATHS[:test],"*","*.rb")) { |f| require f }
+
 class RouteTest < Test::Unit::TestCase
   include Rack::Test::Methods
 
@@ -51,6 +53,4 @@ class RouteTest < Test::Unit::TestCase
     get_and_compare('/very_strange_and_long_route',"custom")
   end
 end
-
 # load application's tests
-Dir.glob(File.join(PATHS[:test],"*","*.rb")) { |f| require f }
