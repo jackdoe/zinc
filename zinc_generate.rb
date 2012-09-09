@@ -19,16 +19,17 @@ end
 def __s_to_field(s, table = "")
     name,t = s.split(':')
     null = t.gsub!(/_not_null/,"").nil? # remove _not_null if it was there
-    uniq = !(t.gsub!(/_unique/,"").nil?)
     (t,default) = t.split("_default_")
     default = __quotize default
+    supported = ['string','text','integer','float','decimal','datetime','timestamp','time','date','binary','boolean']
+    raise "unknown type '#{t}'' supported: #{supported.inspect}" unless supported.include?(t)
     {
       type: t,
       name: name,
       null: null,
       default: default,
-      create: "      t.#{t}\t:#{name}, :null => #{null}, default: #{default}, unique: #{uniq}",
-      add:    "    add_column :#{table}, :#{name}, :#{t}, default: #{default}, unique: #{uniq}",
+      create: "      t.#{t}\t:#{name}, :null => #{null}, default: #{default}",
+      add:    "    add_column :#{table}, :#{name}, :#{t}, default: #{default}",
       remove: "    remove_column :#{table},:#{name}"
     }
 end
