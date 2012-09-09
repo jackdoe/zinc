@@ -5,13 +5,13 @@ namespace :db do
   end
 
   desc 'Migrate the database (options: VERSION=x, VERBOSE=false).'
-  task :migrate do
+  task :migrate => :environment do
     ActiveRecord::Migration.verbose = true
     ActiveRecord::Migrator.migrate MIGRATIONS_DIR, ENV['VERSION'] ? ENV['VERSION'].to_i : nil
   end
 
   desc 'Rolls the schema back to the previous version (specify steps w/ STEP=n).'
-  task :rollback do
+  task :rollback => :environment do
     step = ENV['STEP'] ? ENV['STEP'].to_i : 1
     ActiveRecord::Migrator.rollback MIGRATIONS_DIR, step
   end
