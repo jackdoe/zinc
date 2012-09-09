@@ -1,4 +1,4 @@
-require File.join('.','zinc')
+require File.join(File.dirname(__FILE__),"zinc")
 require 'test/unit'
 require 'rack/test'
 
@@ -53,4 +53,4 @@ class RouteTest < Test::Unit::TestCase
 end
 
 # load application's tests
-Dir.glob(File.join(APP_TESTS,"*","*.rb")) { |f| require f }
+Dir.glob(File.join(PATHS[:test],"*","*.rb")) { |f| require f }

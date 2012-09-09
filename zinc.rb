@@ -2,12 +2,17 @@ require 'sinatra/base'
 require 'cgi'
 ROOT = File.dirname(__FILE__)
 APP = File.join(ROOT,"app")
-APP_VIEWS = File.join(APP,"v")
-APP_TESTS = File.join(APP,"test")
-APP_MODELS = File.join(APP,"m")
-APP_CONTROLLERS = File.join(APP,"c")
-APP_CONFIG = File.join(APP,"conf")
-
+PATHS = {
+  app: APP,
+  root: ROOT,
+  v: File.join(APP,"v"),
+  m: File.join(APP,"m"),
+  c: File.join(APP,"c"),
+  test: File.join(APP,"test"),
+  conf: File.join(APP,"conf"),
+  db: File.join(APP,"db"),
+  migrate: File.join(APP,"db","migrate")
+}
 class String
   def sanitize
     self.gsub(/[^a-zA-Z0-9]_/,'')
@@ -44,7 +49,7 @@ end
 
 class Zinc < Sinatra::Base
   set :root, APP
-  set :views, APP_VIEWS
+  set :views, PATHS[:v]
   set :raise_errors, false
   set :show_exceptions, false
   configure :development, :test do
@@ -83,7 +88,7 @@ class Zinc < Sinatra::Base
 end
 
 # load conf,models and controllers at the end, so we can add more routes
-Dir.glob(File.join("{#{[APP_CONFIG,APP_MODELS,APP_CONTROLLERS].join(',')}}","*.rb")) { |f| require f }
+Dir.glob(File.join("{#{[PATHS[:conf],PATHS[:m],PATHS[:c]].join(',')}}","*.rb")) { |f| require f }
 
 # simple directory structure generator
 if ARGV.count > 0 && ARGV.shift =~ /^(g|generate)$/
@@ -93,16 +98,17 @@ if ARGV.count > 0 && ARGV.shift =~ /^(g|generate)$/
   write = lambda do |file,s|
     File.open(file, 'w') {|f| f.write(s) } and puts "GENERATE(file):#{file}" unless File.exists?(file)
   end
-  [APP,APP_MODELS,APP_CONTROLLERS,APP_VIEWS,APP_CONFIG,APP_TESTS].each { |x| mkdir.call(x) }
+  PATHS.each_value { |x| mkdir.call(x)}
+  write.call(File.join(PATHS[:conf],"db.rb"),"require 'active_record'\nrequire 'logger'\nActiveRecord::Base.establish_connection(:adapter => 'sqlite3',:database => File.join(PATHS[:db],'database.sqlite3'))\nActiveRecord::Base.logger = Logger.new STDOUT\n")
   ARGV.each do |x|
     x = x.sanitize.downcase.capitalize
     c = "#{x}Controller"
     dir = x.downcase
-    mkdir.call File.join(APP_VIEWS,dir)
-    mkdir.call File.join(APP_TESTS,dir)
-    write.call(File.join(APP_MODELS,"#{x}.rb"), "class #{x}\nend\n")
-    write.call(File.join(APP_CONTROLLERS,"#{c}.rb"), "class #{c} < Controller\nend\n")
-    write.call(File.join(APP_TESTS,dir,"#{c}.rb"), "class #{c}Test < Test::Unit::TestCase\n  include Rack::Test::Methods\n  def app\n    Zinc\n  end\nend\n")
-    write.call(File.join(APP_TESTS,dir,"#{x}.rb"), "class #{x}Test < Test::Unit::TestCase\nend\n")    
+    mkdir.call File.join(PATHS[:v],dir)
+    mkdir.call File.join(PATHS[:test],dir)
+    write.call(File.join(PATHS[:m],"#{x}.rb"), "class #{x}\nend\n")
+    write.call(File.join(PATHS[:c],"#{c}.rb"), "class #{c} < Controller\nend\n")
+    write.call(File.join(PATHS[:test],dir,"#{c}.rb"), "class #{c}Test < Test::Unit::TestCase\n  include Rack::Test::Methods\n  def app\n    Zinc\n  end\nend\n")
+    write.call(File.join(PATHS[:test],dir,"#{x}.rb"), "class #{x}Test < Test::Unit::TestCase\nend\n")    
   end
 end
