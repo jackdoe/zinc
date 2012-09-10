@@ -77,6 +77,47 @@ CREATE(directory): ./app/v/person
 GENERATE(file):./app/c/PersonController.rb
 GENERATE(file):./app/test/person/PersonController.rb
 ```
+
+## migration
+currently there is support for `add_column_to_table`, `remove_column_from_table` and `rename_column_from_table new_column_name`
+```
+zinc $ ruby zinc.rb generate migration add_comment_id_to_posts comment_id:integer_not_null
+GENERATE(file):./app/db/migrate/20120910092111_add_comment_id_to_posts.rb
+zinc $ cat ./app/db/migrate/20120910092111_add_comment_id_to_posts.rb
+class AddCommentIdToPosts < ActiveRecord::Migration
+  def up
+    add_column :posts, :comment_id, :integer, null: false, default: nil
+  end
+  def down
+    remove_column :posts, :comment_id
+  end
+end
+
+zinc $ ruby zinc.rb generate migration remove_comment_id_from_posts comment_id:integer_not_null
+GENERATE(file):./app/db/migrate/20120910092252_remove_comment_id_from_posts.rb
+zinc $ cat ./app/db/migrate/20120910092252_remove_comment_id_from_posts.rb
+class RemoveCommentIdFromPosts < ActiveRecord::Migration
+  def up
+    remove_column :posts, :comment_id
+  end
+  def down
+    add_column :posts, :comment_id, :integer, null: false, default: nil
+  end
+end
+
+zinc $ ruby zinc.rb generate migration rename_comment_id_from_posts user_id
+GENERATE(file):./app/db/migrate/20120910092339_rename_comment_id_from_posts.rb
+zinc $ cat ./app/db/migrate/20120910092339_rename_comment_id_from_posts.rb
+class RenameCommentIdFromPosts < ActiveRecord::Migration
+  def up
+    rename_column :posts,:comment_id, :user_id
+  end
+  def down
+    rename_column :posts,:user_id, :comment_id
+  end
+end
+```
+
 ## example app/conf/main.rb
 ```
 require 'active_record'

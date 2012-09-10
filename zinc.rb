@@ -30,6 +30,15 @@ class NilClass
   end
 end
 
+def require_application(o = {})
+  # load conf,models and controllers at the end, so we can add more routes
+  if o[:test]
+    Dir.glob(File.join(PATHS[:test],"*","*.rb")) { |f| require f }
+  else
+    Dir.glob(File.join("{#{[PATHS[:conf],PATHS[:m],PATHS[:c]].join(',')}}","*.rb")) { |f| require f }
+  end
+end
+
 class Controller
   attr_reader :params,:session,:request,:argument,:action,:zinc
   def initialize(session,params,request,zinc)
@@ -89,8 +98,8 @@ class Zinc < Sinatra::Base
   post '/:controller/:action/*' do self.process end
 end
 
-# load conf,models and controllers at the end, so we can add more routes
-Dir.glob(File.join("{#{[PATHS[:conf],PATHS[:m],PATHS[:c]].join(',')}}","*.rb")) { |f| require f }
+
+require_application
 if ARGV.count > 0
   require File.join(ROOT,"zinc_generate")
   generate

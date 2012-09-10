@@ -14,28 +14,34 @@ def __quotize(x)
   return "'#{x}'"
 end
 def __migration_file(s)
-  File.join(PATHS[:migrate],"#{Time.now.strftime '%Y%m%d%H%M%S'}_#{s}.rb")
+  prefix = "#{Time.now.strftime '%Y%m%d%H%M%S'}#{Time.now.usec}"
+  File.join(PATHS[:migrate],"#{prefix}_#{s}.rb")
 end
 def __s_to_field(s, table = "")
     name,t = s.split(':')
+    raise "fields must be in form 'field_name:field_type' not '#{s}'" unless name && t
     null = t.gsub!(/_not_null/,"").nil? # remove _not_null if it was there
+    unique = !t.gsub!(/_unique/,"").nil?
     (t,default) = t.split("_default_")
     default = __quotize default
     supported = ['string','text','integer','float','decimal','datetime','timestamp','time','date','binary','boolean']
     raise "unknown type '#{t}'' supported: #{supported.inspect}" unless supported.include?(t)
+    params = "null: #{null}, default: #{default}"
     {
       type: t,
       name: name,
       null: null,
+      unique: unique,
       default: default,
-      create: "      t.#{t}\t:#{name}, :null => #{null}, default: #{default}",
-      add:    "    add_column :#{table}, :#{name}, :#{t}, default: #{default}",
-      remove: "    remove_column :#{table},:#{name}"
+      create: "      t.#{t}\t:#{name}, #{params}",
+      add:    "    add_column :#{table}, :#{name}, :#{t}, #{params}",
+      remove: "    remove_column :#{table}, :#{name}"
     }
 end
 def migrate(key,args = [])
   table = key.downcase.pluralize
   attributes = []
+  validators = []
   if key =~ /^(add|remove|rename)_(.*)?_(to|from)_(.*)$/ || args.count == 0
     file = __migration_file(key)
     up = []
@@ -75,6 +81,8 @@ EOL
     fields = args.map do |a| 
       f = __s_to_field(a)
       attributes << ":#{f[:name]}"
+      validators << "validates :#{f[:name]}, :presence => true" if !f[:null]
+      validators << "validates :#{f[:name]}, :uniqueness => true" if f[:unique]
       f[:create]
     end    
     text = <<-EOL
@@ -89,10 +97,10 @@ end
 EOL
   end
   __write file,text
-  return attributes
+  return attributes,validators
 end
-def generate
-  command = ARGV.shift
+def generate(argv = ARGV)
+  command = argv.shift
   if command =~ /^(g|generate)$/
     PATHS.each_value { |x| __mkdir(x)}
     __write(File.join(PATHS[:conf],"db.rb"),%Q{
@@ -101,16 +109,17 @@ require 'logger'
 ActiveRecord::Base.establish_connection(:adapter => 'sqlite3',:database => File.join(PATHS[:db],'database.sqlite3'))
 ActiveRecord::Base.logger = Logger.new STDOUT}
     )
-    subcommand = ARGV.shift
+    subcommand = argv.shift
     if subcommand =~ /^(model|controller)$/
-      if x = ARGV.shift
+      if x = argv.shift
         x = x.sanitize.downcase.capitalize
         dir = x.downcase
         __mkdir (File.join(PATHS[:test],dir))
         if subcommand == 'model'
-          attributes = migrate(x,ARGV)
-          attributes_text = (attributes.count > 0 ? "attr_accessor #{attributes.join(",")}" : "")
-          __write File.join(PATHS[:m],"#{x}.rb"), "class #{x} < ActiveRecord::Base\n  #{attributes_text}\nend\n"
+          attributes,validators = migrate(x,argv)
+          attributes_text = (attributes.count > 0 ? "attr_accessible #{attributes.join(",")}" : "")
+          validators_text = (validators.count > 0 ? validators.map { |v| v = "  #{v}"}.join("\n") : "")
+          __write File.join(PATHS[:m],"#{x}.rb"), "class #{x} < ActiveRecord::Base\n  #{attributes_text}\n#{validators_text}\nend\n"
           __write File.join(PATHS[:test],dir,"#{x}.rb"), "class #{x}Test < Test::Unit::TestCase\nend\n"
         else
           __mkdir (File.join(PATHS[:v],dir))
@@ -120,7 +129,7 @@ ActiveRecord::Base.logger = Logger.new STDOUT}
         end
       end
     elsif subcommand =~ /^(migrate|migration)$/
-      migrate(ARGV.shift,ARGV)
+      migrate(argv.shift,argv)
     else
       puts "unknown subcommand #{subcommand}"
     end        

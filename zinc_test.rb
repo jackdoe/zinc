@@ -1,7 +1,8 @@
 require File.join(File.dirname(__FILE__),"zinc")
 require 'test/unit'
 require 'rack/test'
-
+require 'FileUtils'
+require File.join(ROOT,"zinc_generate")
 ENV['RACK_ENV'] = 'test'
 class TestController < Controller
   def get_return(id)
@@ -24,7 +25,7 @@ class Zinc
   end
 end
 
-Dir.glob(File.join(PATHS[:test],"*","*.rb")) { |f| require f }
+require_application test: true
 
 class RouteTest < Test::Unit::TestCase
   include Rack::Test::Methods
@@ -53,4 +54,44 @@ class RouteTest < Test::Unit::TestCase
     get_and_compare('/very_strange_and_long_route',"custom")
   end
 end
-# load application's tests
+
+class GeneratorTest < Test::Unit::TestCase
+
+  def setup
+    @prefix = File.join(ROOT,"__test__generation_directory_#{$$}")
+    PATHS.each { |k,v| PATHS[k] = PATHS[k].gsub(APP,@prefix) }
+
+  end
+  def test_conf_model_and_directory_generation
+    #ruby zinc.rb generate model person name:string_not_null
+    generate ["generate","model","person","name:string_not_null"]
+    generate ["generate","model","category","name:string_not_null_unique"]
+    require_application
+    ActiveRecord::Migrator.migrate PATHS[:migrate], ENV['VERSION'] ? ENV['VERSION'].to_i : nil
+    person = Person.new
+    person.name = "Jack Doe"
+    person.save!
+    assert Person.count == 1
+    assert Person.find_by_name("Jack Doe").id == person.id
+    assert_raise ActiveRecord::RecordInvalid do # assert uniqueness
+      person = Person.new
+      person.save!
+    end
+    category = Category.new
+    category.name = "jazz"
+    category.save!
+    assert_raise ActiveRecord::RecordInvalid do #assert uniqueness
+      category = Category.new
+      category.name = "jazz"
+      category.save!
+    end
+    assert_raise ActiveRecord::RecordInvalid do #assert presence
+      category = Category.new
+      category.save!
+    end
+  end
+  def teardown
+    FileUtils.rm_r @prefix if @prefix =~ /__test__generation_directory_\d+$/
+    PATHS.each { |k,v| PATHS[k] = PATHS[k].gsub(@prefix,APP) }
+  end
+end
