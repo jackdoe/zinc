@@ -5,8 +5,11 @@ require 'fileutils'
 require File.join(ROOT,"zinc_generate")
 
 def __silence
-  ActiveRecord::Base.logger = false
-  ActiveRecord::Migration.verbose = false
+  begin
+    ActiveRecord::Base.logger = false
+    ActiveRecord::Migration.verbose = false
+  rescue 
+  end
   ENV['RACK_ENV'] = 'test'
 end
 
