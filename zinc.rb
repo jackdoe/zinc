@@ -65,6 +65,7 @@ class Zinc < Sinatra::Base
   set :views, PATHS[:v]
   set :raise_errors, false
   set :show_exceptions, false
+  use Rack::MethodOverride
   configure :development, :test do
     set :logging, true
   end
@@ -97,6 +98,9 @@ class Zinc < Sinatra::Base
   end
 
   get '/:controller/:action/*' do self.process end
+  options '/:controller/:action/*' do self.process end
+  put '/:controller/:action/*' do self.process end
+  delete '/:controller/:action/*' do self.process end
   post '/:controller/:action/*' do self.process end
 end
 

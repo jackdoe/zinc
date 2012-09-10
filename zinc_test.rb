@@ -15,6 +15,8 @@ end
 
 __silence
 
+require_application test: true
+
 class TestController < Controller
   def get_return(id)
     @output = id
@@ -36,7 +38,6 @@ class Zinc
   end
 end
 
-require_application test: true
 
 class RouteTest < Test::Unit::TestCase
   include Rack::Test::Methods
@@ -66,7 +67,7 @@ class RouteTest < Test::Unit::TestCase
   end
 end
 
-class GeneratorTest < Test::Unit::TestCase
+class ZZZZMustBeLastBecauseDestorysActiveRecordConnectionGeneratorTest < Test::Unit::TestCase
 
   def setup
     @prefix = File.join(ROOT,"__test__generation_directory_#{$$}")
@@ -116,3 +117,4 @@ class GeneratorTest < Test::Unit::TestCase
     PATHS.each { |k,v| PATHS[k] = PATHS[k].gsub(@prefix,APP) }
   end
 end
+
