@@ -74,7 +74,7 @@ class Zinc < Sinatra::Base
       variables[:session] = session
       erb page.to_sym, { layout: false }, variables
     end
-     alias_method :h, :escape_html		
+    alias_method :h, :escape_html		
   end
   def process
     klass = Controller.find(@params[:controller])
