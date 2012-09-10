@@ -132,7 +132,7 @@ ActiveRecord::Base.logger = Logger.new STDOUT}
           relations.map!  { |x| x = "  #{x}"}
           attributes.map! { |x| x = "  attr_accessible #{x}"}
           validators.map! { |x| x = "  #{x}"}
-          __write File.join(PATHS[:m],"#{x}.rb"), "class #{x} < ActiveRecord::Base\n  #{attributes.join("\n")}\n#{validators.join("\n")}\n#{relations.join("\n")}\nend\n"
+          __write File.join(PATHS[:m],"#{x}.rb"), "class #{x} < ActiveRecord::Base\n#{attributes.join("\n")}\n#{validators.join("\n")}\n#{relations.join("\n")}\nend\n"
           __write File.join(PATHS[:test],dir,"#{x}.rb"), "class #{x}Test < Test::Unit::TestCase\nend\n"
         else
           __mkdir (File.join(PATHS[:v],dir))
