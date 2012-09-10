@@ -64,8 +64,9 @@ class GeneratorTest < Test::Unit::TestCase
   end
   def test_conf_model_and_directory_generation
     #ruby zinc.rb generate model person name:string_not_null
+    default = "bzbz"
     generate ["generate","model","person","name:string_not_null"]
-    generate ["generate","model","category","name:string_not_null_unique"]
+    generate ["generate","model","category","name:string_not_null_unique","bzz:string_not_null_default_#{default}"]
     require_application
     ActiveRecord::Migrator.migrate PATHS[:migrate], ENV['VERSION'] ? ENV['VERSION'].to_i : nil
     person = Person.new
@@ -80,6 +81,7 @@ class GeneratorTest < Test::Unit::TestCase
     category = Category.new
     category.name = "jazz"
     category.save!
+    assert_equal category.bzz,default
     assert_raise ActiveRecord::RecordInvalid do #assert uniqueness
       category = Category.new
       category.name = "jazz"
