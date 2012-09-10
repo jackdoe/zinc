@@ -1,3 +1,5 @@
+#!/usr/bin/env ruby
+
 require 'sinatra/base'
 require 'cgi'
 ROOT = File.dirname(__FILE__)
