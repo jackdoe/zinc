@@ -6,8 +6,10 @@ require File.join(ROOT,"zinc_generate")
 
 def __silence
   begin
-    ActiveRecord::Base.logger = false
-    ActiveRecord::Migration.verbose = false
+    if ENV['VERBOSE'].nil?
+      ActiveRecord::Base.logger = false
+      ActiveRecord::Migration.verbose = false
+    end
   rescue 
   end
   ENV['RACK_ENV'] = 'test'

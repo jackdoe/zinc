@@ -2,7 +2,7 @@ require 'active_support/inflector'
 
 #ugly as hell
 def __say(s)
-  puts s unless ENV['RACK_ENV'] == 'test'
+  puts s unless ENV['RACK_ENV'] == 'test' && ENV['VERBOSE'].nil?
 end
 def __write(file,s)
   File.open(file, 'w') {|f| f.write(s) } and __say "GENERATE(file):#{file}" unless File.exists?(file)
