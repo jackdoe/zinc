@@ -65,32 +65,39 @@ class GeneratorTest < Test::Unit::TestCase
   def test_conf_model_and_directory_generation
     #ruby zinc.rb generate model person name:string_not_null
     default = "bzbz"
-    generate ["generate","model","person","name:string_not_null"]
-    generate ["generate","model","category","name:string_not_null_unique","bzz:string_not_null_default_#{default}"]
+    generate ["generate","model","person","name:string_not_null","belongs_to:category"]
+    generate ["generate","model","category","name:string_not_null_unique","bzz:string_not_null_default_#{default}","has_many:people"]
     require_application
     ActiveRecord::Migrator.migrate PATHS[:migrate], ENV['VERSION'] ? ENV['VERSION'].to_i : nil
-    person = Person.new
-    person.name = "Jack Doe"
-    person.save!
-    assert Person.count == 1
-    assert Person.find_by_name("Jack Doe").id == person.id
-    assert_raise ActiveRecord::RecordInvalid do # assert uniqueness
-      person = Person.new
-      person.save!
-    end
     category = Category.new
     category.name = "jazz"
     category.save!
     assert_equal category.bzz,default
+
     assert_raise ActiveRecord::RecordInvalid do #assert uniqueness
-      category = Category.new
-      category.name = "jazz"
-      category.save!
+      Category.new(name: "jazz").save!
     end
     assert_raise ActiveRecord::RecordInvalid do #assert presence
-      category = Category.new
-      category.save!
+      Category.new.save!
     end
+
+    person = Person.new
+    person.name = "Jack Doe"
+    person.category = category
+    person.save!
+    assert_raise ActiveRecord::RecordInvalid do #assert relation presence
+      uncategorized_person = Person.new
+      uncategorized_person.name = "Jack Doe"
+      uncategorized_person.save!
+    end
+    assert_equal Person.count,1
+    assert_equal Person.find_by_name("Jack Doe").id,person.id
+    assert_equal Person.find_by_name("Jack Doe").category,category
+    assert_raise ActiveRecord::RecordInvalid do # assert uniqueness
+      Person.new.save!
+    end
+    assert_equal Category.first.people.first,person
+
   end
   def teardown
     FileUtils.rm_r @prefix if @prefix =~ /__test__generation_directory_\d+$/

@@ -24,7 +24,7 @@ def __s_to_field(s, table = "")
     unique = !t.gsub!(/_unique/,"").nil?
     (t,default) = t.split("_default_")
     default = __quotize default
-    supported = ['string','text','integer','float','decimal','datetime','timestamp','time','date','binary','boolean']
+    supported = ['string','text','integer','float','decimal','datetime','timestamp','time','date','binary','boolean','references']
     raise "unknown type '#{t}'' supported: #{supported.inspect}" unless supported.include?(t)
     params = "null: #{null}, default: #{default}"
     {
@@ -42,6 +42,7 @@ def migrate(key,args = [])
   table = key.downcase.pluralize
   attributes = []
   validators = []
+  relations = []
   if key =~ /^(add|remove|rename)_(.*)?_(to|from)_(.*)$/ || args.count == 0
     file = __migration_file(key)
     up = []
@@ -78,12 +79,23 @@ end
 EOL
   else
     file = __migration_file("create_#{table}")
-    fields = args.map do |a| 
-      f = __s_to_field(a)
-      attributes << ":#{f[:name]}"
-      validators << "validates :#{f[:name]}, :presence => true" if !f[:null]
-      validators << "validates :#{f[:name]}, :uniqueness => true" if f[:unique]
-      f[:create]
+    fields = []
+    args.map do |a|
+      if a =~ /^(has_many|has_one|belongs_to|has_and_belongs_to_many):(.*)/
+        name = $2
+        action = $1
+        if action == 'belongs_to'
+          fields << __s_to_field("#{name}:references")[:create]
+          validators << "validates :#{name}, presence: true"
+        end
+        relations << "#{$1} :#{name}"
+      else
+        f = __s_to_field(a)
+        attributes << ":#{f[:name]}"
+        validators << "validates :#{f[:name]}, presence: true" if !f[:null]
+        validators << "validates :#{f[:name]}, uniqueness: true" if f[:unique]
+        fields << f[:create]
+      end
     end    
     text = <<-EOL
 class Create#{table.capitalize} < ActiveRecord::Migration
@@ -97,7 +109,7 @@ end
 EOL
   end
   __write file,text
-  return attributes,validators
+  return attributes,validators,relations
 end
 def generate(argv = ARGV)
   command = argv.shift
@@ -106,7 +118,7 @@ def generate(argv = ARGV)
     __write(File.join(PATHS[:conf],"db.rb"),%Q{
 require 'active_record'
 require 'logger'
-ActiveRecord::Base.establish_connection(:adapter => 'sqlite3',:database => File.join(PATHS[:db],'database.sqlite3'))
+ActiveRecord::Base.establish_connection(adapter: 'sqlite3',database: File.join(PATHS[:db],'database.sqlite3'))
 ActiveRecord::Base.logger = Logger.new STDOUT}
     )
     subcommand = argv.shift
@@ -116,10 +128,11 @@ ActiveRecord::Base.logger = Logger.new STDOUT}
         dir = x.downcase
         __mkdir (File.join(PATHS[:test],dir))
         if subcommand == 'model'
-          attributes,validators = migrate(x,argv)
-          attributes_text = (attributes.count > 0 ? "attr_accessible #{attributes.join(",")}" : "")
-          validators_text = (validators.count > 0 ? validators.map { |v| v = "  #{v}"}.join("\n") : "")
-          __write File.join(PATHS[:m],"#{x}.rb"), "class #{x} < ActiveRecord::Base\n  #{attributes_text}\n#{validators_text}\nend\n"
+          attributes,validators,relations = migrate(x,argv)
+          relations.map!  { |x| x = "  #{x}"}
+          attributes.map! { |x| x = "  attr_accessible #{x}"}
+          validators.map! { |x| x = "  #{x}"}
+          __write File.join(PATHS[:m],"#{x}.rb"), "class #{x} < ActiveRecord::Base\n  #{attributes.join("\n")}\n#{validators.join("\n")}\n#{relations.join("\n")}\nend\n"
           __write File.join(PATHS[:test],dir,"#{x}.rb"), "class #{x}Test < Test::Unit::TestCase\nend\n"
         else
           __mkdir (File.join(PATHS[:v],dir))
