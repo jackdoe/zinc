@@ -1,11 +1,14 @@
 require 'active_support/inflector'
 
 #ugly as hell
+def __say(s)
+  puts s unless ENV['RACK_ENV'] == 'test'
+end
 def __write(file,s)
-  File.open(file, 'w') {|f| f.write(s) } and puts "GENERATE(file):#{file}" unless File.exists?(file)
+  File.open(file, 'w') {|f| f.write(s) } and __say "GENERATE(file):#{file}" unless File.exists?(file)
 end
 def __mkdir(name)
-  Dir.mkdir(name) and puts "CREATE(directory): #{name}" unless Dir.exists?(name)
+  Dir.mkdir(name) and __say "CREATE(directory): #{name}" unless Dir.exists?(name)
 end
 def __quotize(x)
   return "nil" if x.nil?

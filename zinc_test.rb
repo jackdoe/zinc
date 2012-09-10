@@ -1,9 +1,17 @@
 require File.join(File.dirname(__FILE__),"zinc")
 require 'test/unit'
 require 'rack/test'
-require 'FileUtils'
+require 'fileutils'
 require File.join(ROOT,"zinc_generate")
-ENV['RACK_ENV'] = 'test'
+
+def __silence
+  ActiveRecord::Base.logger = false
+  ActiveRecord::Migration.verbose = false
+  ENV['RACK_ENV'] = 'test'
+end
+
+__silence
+
 class TestController < Controller
   def get_return(id)
     @output = id
@@ -68,6 +76,7 @@ class GeneratorTest < Test::Unit::TestCase
     generate ["generate","model","person","name:string_not_null","belongs_to:category"]
     generate ["generate","model","category","name:string_not_null_unique","bzz:string_not_null_default_#{default}","has_many:people"]
     require_application
+    __silence
     ActiveRecord::Migrator.migrate PATHS[:migrate], ENV['VERSION'] ? ENV['VERSION'].to_i : nil
     category = Category.new
     category.name = "jazz"
