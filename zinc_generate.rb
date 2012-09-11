@@ -153,5 +153,37 @@ ActiveRecord::Base.logger = Logger.new STDOUT}
     system("irb -r '#{File.join(ROOT,"zinc.rb")}'")
   elsif command =~ /^(t|test)$/
     puts %x{ruby #{File.join(ROOT,"zinc_test.rb")}}
+  elsif command =~ /^graph$/
+    # thanks to 
+    # http://patshaughnessy.net/2011/9/17/bundlers-best-kept-secret
+    require 'graphviz'
+    graph_viz = GraphViz::new('Gemfile', {:concentrate => true, :normalize => true, :nodesep => 0.55})
+    graph_viz.edge[:fontname] = graph_viz.node[:fontname] = 'Arial, Helvetica, SansSerif'
+    graph_viz.edge[:fontsize] = 12
+    models = {}
+    def each_model
+      ObjectSpace.each_object(Class) do |klass|
+        yield klass if klass.ancestors.include?(ActiveRecord::Base) && klass != ActiveRecord::Base
+      end
+    end    
+    each_model do |model|
+      name = model.to_s
+      models[name] = graph_viz.add_node(name, { :shape => 'box',
+                                                :fontsize => 14,
+                                                :style => 'filled',
+                                                :fillcolor => '#B9B9D5' } )
+    end
+
+    each_model do |model|
+      model_name = model.to_s
+      model.reflect_on_all_associations.each do |assoc|
+        assoc_name = assoc.name.to_s.singularize.camelize
+        graph_viz.add_edges(models[model_name],
+                           models[assoc_name],
+                           { :weight => 2 }
+                          ) unless models[assoc_name].nil?
+      end
+    end
+    graph_viz.output(:png => "#{File.join(PATHS[:app],"public"}/graph.png")
   end
 end
