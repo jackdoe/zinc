@@ -168,7 +168,7 @@ ActiveRecord::Base.logger = Logger.new STDOUT}
     end    
     each_model do |model|
       name = model.to_s
-      models[name] = graph_viz.add_node(name, { :shape => 'box',
+      models[name] = graph_viz.add_nodes(name, { :shape => 'box',
                                                 :fontsize => 14,
                                                 :style => 'filled',
                                                 :fillcolor => '#B9B9D5' } )
