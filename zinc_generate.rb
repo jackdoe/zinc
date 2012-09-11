@@ -184,6 +184,6 @@ ActiveRecord::Base.logger = Logger.new STDOUT}
                           ) unless models[assoc_name].nil?
       end
     end
-    graph_viz.output(:png => "#{File.join(PATHS[:app],"public"}/graph.png")
+    graph_viz.output(:png => "#{File.join(PATHS[:app],"public")}/graph.png")
   end
 end
