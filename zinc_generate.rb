@@ -168,8 +168,26 @@ ActiveRecord::Base.logger = Logger.new STDOUT}
     end    
     each_model do |model|
       name = model.to_s
-      models[name] = graph_viz.add_nodes(name, { :shape => 'box',
-                                                :fontsize => 14,
+      fields = "<<TABLE BORDER='1'><TR><TD COLSPAN='2' BGCOLOR='#CCCCCC' ALIGN='CENTER'><FONT POINT-SIZE='16'>#{name}</FONT></TD></TR>"
+      (model.column_names / 2).each do |x|
+        fields << "<TR>"
+          x.each do |y|
+            if y == "is_deleted"
+              fields << "<TD BGCOLOR='#CC5500'>#{y}</TD>"
+            elsif y =~ /_id$/
+              fields << "<TD BGCOLOR='#0055CC'>#{y}</TD>"
+            elsif y == "id" || y == "created_at" || y == "updated_at"
+              fields << "<TD BGCOLOR='#555555'>#{y}</TD>"
+            else
+              fields << "<TD>#{y}</TD>"
+            end
+          end
+        fields << "</TR>"        
+      end
+      fields << "</TABLE>>"
+      models[name] = graph_viz.add_nodes(name, {
+                                                :label => fields,
+                                                :shape => 'box',
                                                 :style => 'filled',
                                                 :fillcolor => '#B9B9D5' } )
     end
