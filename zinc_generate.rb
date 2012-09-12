@@ -198,8 +198,8 @@ ActiveRecord::Base.logger = Logger.new STDOUT}
         assoc_name = assoc.name.to_s.singularize.camelize
         graph_viz.add_edges(models[model_name],
                            models[assoc_name],
-                           { :weight => 2 }
-                          ) unless models[assoc_name].nil?
+                           { :weight => 2 , :label => assoc.macro.to_s}
+                          ) unless models[assoc_name].nil? || !(assoc.macro.to_s =~ /(has_many|has_one)/)
       end
     end
     graph_viz.output(:png => "#{File.join(PATHS[:app],"public")}/graph.png")
