@@ -18,7 +18,21 @@ end
 __silence
 
 require_application test: true
-
+class TestString < Test::Unit::TestCase
+  def test_sanitize
+    s = "Aa0_"
+    assert_equal ('!@#$%^&*())' + s + '!@{$%^&*()/}#*&////....//.[][]\\').sanitize, s
+  end
+end
+class TestNil < Test::Unit::TestCase
+  def test_empty
+    s = nil
+    assert_nothing_raised do 
+      s.empty?
+    end
+    assert_equal s.empty?,true
+  end
+end
 class TestController < Controller
   def get_return(id)
     @output = id
