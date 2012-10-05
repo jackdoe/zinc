@@ -19,7 +19,7 @@ PATHS = {
 }
 class String
   def sanitize
-    self.gsub(/[^a-zA-Z0-9]_/,'')
+    self.gsub(/[^a-zA-Z0-9_]/,'')
   end
   def escape
     CGI::escapeHTML(self)
