@@ -17,7 +17,7 @@ def __quotize(x)
   return "'#{x}'"
 end
 def __migration_file(s)
-  prefix = "#{Time.now.strftime '%Y%m%d%H%M%S'}#{Time.now.usec}"
+  prefix = "#{Time.now.strftime '%Y%m%d%H%M%S'}#{'%.10d' % Time.now.usec}"
   File.join(PATHS[:migrate],"#{prefix}_#{s}.rb")
 end
 def __s_to_field(s, table = "")
