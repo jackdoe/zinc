@@ -3,7 +3,7 @@
 require 'sinatra/base'
 require 'cgi'
 ROOT = File.dirname(__FILE__)
-
+PRODUCTION = (ENV["RACK_ENV"] == "production")
 
 APP = File.join(ROOT,"app")
 PATHS = {
@@ -85,6 +85,15 @@ class Zinc < Sinatra::Base
     def partial(page, variables={})
       variables[:session] = session
       erb page.to_sym, { layout: false }, variables
+    end
+    def cached_partial(page, ident, variables={})
+      if PRODUCTION
+        key = "#{page}_#{ident}"
+        v = CACHE[key]
+        CACHE[key] = partial(page, variables) unless v
+        return (v || CACHE[key])
+      end
+      partial(page, variables)
     end
     alias_method :h, :escape_html		
   end
