@@ -87,12 +87,7 @@ class Zinc < Sinatra::Base
       erb page.to_sym, { layout: false }, variables
     end
     def cached_partial(page, ident, variables={})
-      if PRODUCTION
-        key = "#{page}_#{ident}"
-        v = CACHE[key]
-        CACHE[key] = partial(page, variables) unless v
-        return (v || CACHE[key])
-      end
+      return CACHE["#{page}_#{ident}"] ||= partial(page, variables) if PRODUCTION
       partial(page, variables)
     end
     alias_method :h, :escape_html		
