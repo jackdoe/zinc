@@ -11,6 +11,7 @@ PATHS = {
   root: ROOT,
   v: File.join(APP,"v"),
   m: File.join(APP,"m"),
+  modules: File.join(APP,"modules"),
   c: File.join(APP,"c"),
   test: File.join(APP,"test"),
   conf: File.join(APP,"conf"),
@@ -48,7 +49,7 @@ def require_application(o = {})
   if o[:test]
     Dir.glob(File.join(PATHS[:test],"*","*.rb")) { |f| require f }
   else
-    Dir.glob(File.join("{#{[PATHS[:conf],PATHS[:m],PATHS[:c]].join(',')}}","*.rb")) { |f| require f }
+    Dir.glob(File.join("{#{[PATHS[:conf],PATHS[:modules],PATHS[:m],PATHS[:c]].join(',')}}","*.rb")) { |f| require f }
   end
 end
 
