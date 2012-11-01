@@ -81,7 +81,8 @@ class Controller
         begin
           folder = File.join(self.cache_folder,self.name,@action)
           FileUtils.mkdir_p(folder)
-          file = File.join(folder,(@argument.empty? ? "index.html" : "#{@argument.sanitize}.html"))
+          file = @cache.kind_of?(String) ? @cache : @argument
+          file = File.join(folder,"#{file.empty? ? 'index' : file.sanitize}.html")
           warn "cache file (#{file}) already exists fix your proxy configuration expected: try_files  $uri /cache$uri/index.html /cache$uri.html @proxy;" if File.exists?(file)
           File.open(file,'wb') { |f| f.write(r) }
         rescue Exception => e

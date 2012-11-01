@@ -37,6 +37,22 @@ class TestController < Controller
   def get_return(id)
     @output = id
   end
+  def get_cache(arg)
+    @cache = true
+    @output = 'cached output'
+  end
+  def get_fcache(arg)
+    @cache = 'static_name'
+    @output = 'fcached output'
+  end
+  def get_icache(arg)
+    @cache = ''
+    @output = 'icached output'
+  end
+  def get_uncache(*a)
+    self.truncate_cache
+    @output = 'done'
+  end
   def post_return(id)
     @output = id
   end
@@ -47,13 +63,6 @@ class TestController < Controller
     raise "oops"
   end
 end
-
-class Zinc
-  get '/very_strange_and_long_route' do
-    "custom"
-  end
-end
-
 
 class RouteTest < Test::Unit::TestCase
   include Rack::Test::Methods
@@ -73,13 +82,37 @@ class RouteTest < Test::Unit::TestCase
       assert_equal last_response.body, expected
     end
   end
+  def cached_file(c,f)
+    @cached_files ||= []
+    f = File.join(app.settings.public_folder,"cache","test",c,f)
+    @cached_files << f unless @cached_files.include?(f)
+    f
+  end
   def test_it
-    get_and_compare('/',404)
     get_and_compare('/test/exception/',500)
     get_and_compare('/test/return/5',"5")
     get_and_compare('/test/return/5',"5",{post: true})
     get_and_compare('/test/list/',"hello world")
-    get_and_compare('/very_strange_and_long_route',"custom")
+  end
+  def test_caches
+    files = 0
+    get_and_compare('/test/cache/',"cached output")
+    assert File.exist?(cached_file("cache","index.html"))
+    files += 1
+    get_and_compare('/test/cache/xxxx',"cached output")
+    assert File.exist?(cached_file("cache","xxxx.html"))
+    files += 1
+    get_and_compare('/test/fcache/xxxx',"fcached output")
+    assert File.exist?(cached_file("fcache","static_name.html"))
+    files += 1
+    get_and_compare('/test/icache/xxxx',"icached output")
+    assert File.exist?(cached_file("icache","index.html"))
+    files += 1
+    get_and_compare('/test/uncache/',"done")
+    assert @cached_files.count == files
+    @cached_files.each do |f|
+        assert !File.exist?(f)
+    end
   end
 end
 
@@ -88,44 +121,43 @@ class ZZZZMustBeLastBecauseDestorysActiveRecordConnectionGeneratorTest < Test::U
   def setup
     @prefix = File.join(ROOT,"__test__generation_directory_#{$$}")
     PATHS.each { |k,v| PATHS[k] = PATHS[k].gsub(APP,@prefix) }
-
   end
   def test_conf_model_and_directory_generation
     #ruby zinc.rb generate model person name:string_not_null
     default = "bzbz"
-    generate ["generate","model","person","name:string_not_null","belongs_to:category"]
-    generate ["generate","model","category","name:string_not_null_unique","bzz:string_not_null_default_#{default}","has_many:people"]
+    generate ["generate","model","zzperson","name:string_not_null","belongs_to:zzcategory"]
+    generate ["generate","model","zzcategory","name:string_not_null_unique","bzz:string_not_null_default_#{default}","has_many:zzpeople"]
     require_application
     __silence
     ActiveRecord::Migrator.migrate PATHS[:migrate], ENV['VERSION'] ? ENV['VERSION'].to_i : nil
-    category = Category.new
+    category = Zzcategory.new
     category.name = "jazz"
     category.save!
     assert_equal category.bzz,default
 
     assert_raise ActiveRecord::RecordInvalid do #assert uniqueness
-      Category.new(name: "jazz").save!
+      Zzcategory.new(name: "jazz").save!
     end
     assert_raise ActiveRecord::RecordInvalid do #assert presence
-      Category.new.save!
+      Zzcategory.new.save!
     end
 
-    person = Person.new
+    person = Zzperson.new
     person.name = "Jack Doe"
-    person.category = category
+    person.zzcategory = category
     person.save!
     assert_raise ActiveRecord::RecordInvalid do #assert relation presence
-      uncategorized_person = Person.new
+      uncategorized_person = Zzperson.new
       uncategorized_person.name = "Jack Doe"
       uncategorized_person.save!
     end
-    assert_equal Person.count,1
-    assert_equal Person.find_by_name("Jack Doe").id,person.id
-    assert_equal Person.find_by_name("Jack Doe").category,category
+    assert_equal Zzperson.count,1
+    assert_equal Zzperson.find_by_name("Jack Doe").id,person.id
+    assert_equal Zzperson.find_by_name("Jack Doe").zzcategory,category
     assert_raise ActiveRecord::RecordInvalid do # assert uniqueness
-      Person.new.save!
+      Zzperson.new.save!
     end
-    assert_equal Category.first.people.first,person
+    assert_equal Zzcategory.first.zzpeople.first,person
 
   end
   def teardown
