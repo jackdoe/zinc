@@ -133,6 +133,10 @@ class Zinc < Sinatra::Base
     "not found"
   end
   error 500 do
+    if @exception
+      warn [@exception.message,@exception.backtrace.first(10)].flatten.join("\n")
+      warn '.. backtrace truncated to 10 rows..' if @exception.backtrace.count > 10
+    end
     if settings.environment == :development
       "internal server error<br>exception.message: #{@exception.message rescue 'undefined error'}<br><hr><br>#{@exception.backtrace.join('<br>') rescue ''}"
     else
