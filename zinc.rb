@@ -61,11 +61,37 @@ class Controller
     @layout = @request.xhr? ? false : nil
     @action = @params[:action].sanitize rescue ''
     @argument = @params[:splat].first rescue nil
+    @cache = nil
+  end
+  def truncate_cache
+    warn "#{self.class}: truncating #{self.cache_folder}"
+    Dir[File.join(self.cache_folder,"**","*.html")].each { |x| FileUtils.rm x }
+  end
+  def cache_folder
+    File.join(@zinc.settings.public_folder,"cache")
   end
   def start
     self.send("#{@request.request_method.sanitize.downcase}_#{@action}".to_sym,@argument)
-    return @output if @output
-    return @zinc.erb File.join(self.class.to_s.downcase.gsub(/controller$/,''),@action).to_sym, {:locals  => {:c => self}, :layout => @layout}
+    r = @output || @zinc.erb(File.join(self.name,@action).to_sym, {:locals  => {:c => self}, :layout => @layout})
+    if @cache
+        # expected nginx config
+        # location / {
+        #      try_files $uri /cache$uri/index.html /cache$uri.html @proxy;
+        # }
+        begin
+          folder = File.join(self.cache_folder,self.name,@action)
+          FileUtils.mkdir_p(folder)
+          file = File.join(folder,(@argument.empty? ? "index.html" : "#{@argument.sanitize}.html"))
+          warn "cache file (#{file}) already exists fix your proxy configuration expected: try_files  $uri /cache$uri/index.html /cache$uri.html @proxy;" if File.exists?(file)
+          File.open(file,'wb') { |f| f.write(r) }
+        rescue Exception => e
+          warn "failed to create cache file #{file} - #{e.message}"
+        end
+    end
+    r
+  end
+  def name
+    self.class.to_s.downcase.gsub(/controller$/,'').sanitize
   end
   def Controller.find(name)
     return Kernel.const_get(name.to_s.sanitize.capitalize.gsub(/$/,'Controller')) 
