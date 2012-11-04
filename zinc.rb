@@ -95,7 +95,7 @@ class Controller
     self.class.to_s.downcase.gsub(/controller$/,'').sanitize
   end
   def Controller.find(name)
-    return Kernel.const_get(name.to_s.sanitize.capitalize.gsub(/$/,'Controller')) 
+    return (Kernel.const_get(name.to_s.sanitize.capitalize.gsub(/$/,'Controller')) rescue nil)
   end
 end
 
@@ -118,7 +118,7 @@ class Zinc < Sinatra::Base
       return CACHE["#{page}_#{ident}"] ||= partial(page, variables) if PRODUCTION
       partial(page, variables)
     end
-    alias_method :h, :escape_html		
+    alias_method :h, :escape_html
   end
   def process
     klass = Controller.find(@params[:controller])

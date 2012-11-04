@@ -90,6 +90,7 @@ class RouteTest < Test::Unit::TestCase
   end
   def test_it
     get_and_compare('/test/exception/',500)
+    get_and_compare('/unexisting_controller/undefined_action/',404)
     get_and_compare('/test/return/5',"5")
     get_and_compare('/test/return/5',"5",{post: true})
     get_and_compare('/test/list/',"hello world")
