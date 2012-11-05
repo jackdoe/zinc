@@ -124,6 +124,7 @@ class Zinc < Sinatra::Base
     klass = Controller.find(@params[:controller])
     error 404 if klass.nil?
     begin
+      raise ArgumentError unless klass.ancestors.include?(Controller)
       klass.new(session,params,request,self).start
     rescue Exception => @exception
       error 500

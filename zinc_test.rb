@@ -33,6 +33,11 @@ class TestNil < Test::Unit::TestCase
     assert_equal s.empty?,true
   end
 end
+class NoncontrollerController
+  def get_return(id)
+    @output = id
+  end
+end
 class TestController < Controller
   def get_return(id)
     @output = id
@@ -90,6 +95,7 @@ class RouteTest < Test::Unit::TestCase
   end
   def test_it
     get_and_compare('/test/exception/',500)
+    get_and_compare('/noncontroller/return/5',500)
     get_and_compare('/unexisting_controller/undefined_action/',404)
     get_and_compare('/test/return/5',"5")
     get_and_compare('/test/return/5',"5",{post: true})
