@@ -141,7 +141,7 @@ class Zinc < Sinatra::Base
     if settings.environment == :development
       "internal server error<br>exception.message: #{@exception.message rescue 'undefined error'}<br><hr><br>#{@exception.backtrace.join('<br>') rescue ''}"
     else
-      "internet server error"
+      "internal server error"
     end
   end
 
