@@ -62,6 +62,7 @@ class Controller
     @action = @params[:action].sanitize rescue ''
     @argument = @params[:splat].first rescue nil
     @cache = nil
+    @cache_ext = ".html"
   end
   def truncate_cache
     warn "#{self.class}: truncating #{self.cache_folder}"
@@ -82,7 +83,7 @@ class Controller
           folder = File.join(self.cache_folder,self.name,@action)
           FileUtils.mkdir_p(folder)
           file = @cache.kind_of?(String) ? @cache : @argument
-          file = File.join(folder,"#{file.empty? ? 'index' : file.sanitize}.html")
+          file = File.join(folder,"#{file.empty? ? 'index' : file.sanitize}#{@cache_ext}")
           warn "cache file (#{file}) already exists fix your proxy configuration expected: try_files  $uri /cache$uri/index.html /cache$uri.html @proxy;" if File.exists?(file)
           File.open(file,'wb') { |f| f.write(r) }
         rescue Exception => e
