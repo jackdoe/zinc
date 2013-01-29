@@ -66,7 +66,7 @@ class Controller
   end
   def truncate_cache
     warn "#{self.class}: truncating #{self.cache_folder}"
-    Dir[File.join(self.cache_folder,"**","*.html")].each { |x| FileUtils.rm x }
+    Dir[File.join(self.cache_folder,"**","*.{html,png,jpg,raw}")].each { |x| FileUtils.rm x }
   end
   def cache_folder
     File.join(@zinc.settings.public_folder,"cache")
@@ -83,7 +83,7 @@ class Controller
           folder = File.join(self.cache_folder,self.name,@action)
           FileUtils.mkdir_p(folder)
           file = @cache.kind_of?(String) ? @cache : @argument
-          file = File.join(folder,"#{file.empty? ? 'index' : file.sanitize}#{@cache_ext ? '.' : ''}#{@cache_ext.to_s.sanitize}")
+          file = File.join(folder,"#{file.empty? ? 'index' : file.sanitize}.#{@cache_ext.to_s.sanitize}")
           warn "cache file (#{file}) already exists fix your proxy configuration expected: try_files  $uri /cache$uri/index.html /cache$uri.html @proxy;" if File.exists?(file)
           File.open(file,'wb') { |f| f.write(r) }
         rescue Exception => e
