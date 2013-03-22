@@ -58,7 +58,7 @@ class Controller
   def initialize(session,params,request,zinc)
     @session,@params,@request,@zinc = session,params,request,zinc
     @output = nil
-    @layout = @request.xhr? ? false : nil
+    @layout = @request.xhr? ? false : "layout".to_sym
     @action = @params[:action].sanitize rescue ''
     @argument = @params[:splat].first rescue nil
     @cache = nil
