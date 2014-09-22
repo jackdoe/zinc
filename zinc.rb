@@ -63,6 +63,7 @@ class Controller
     @argument = @params[:splat].first rescue nil
     @cache = nil
     @cache_ext = "html"
+    @force_template_prefix = nil
   end
   def truncate_cache
     warn "#{self.class}: truncating #{self.cache_folder}"
@@ -71,9 +72,12 @@ class Controller
   def cache_folder
     File.join(@zinc.settings.public_folder,"cache")
   end
+  def prefix(a)
+    @force_template_prefix ? File.join(@force_template_prefix.sanitize,a.to_s) : a.to_s
+  end
   def start
     self.send("#{@request.request_method.sanitize.downcase}_#{@action}".to_sym,@argument)
-    r = @output || @zinc.erb(File.join(self.name,@action).to_sym, {:locals  => {:c => self}, :layout => @layout})
+    r = @output || @zinc.erb(File.join(prefix(self.name),@action).to_sym, {:locals  => {:c => self}, :layout => prefix(@layout).to_sym})
     if @cache
         # expected nginx config
         # location / {
