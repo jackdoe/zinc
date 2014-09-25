@@ -77,7 +77,7 @@ class Controller
   end
   def start
     self.send("#{@request.request_method.sanitize.downcase}_#{@action}".to_sym,@argument)
-    r = @output || @zinc.erb(File.join(prefix(self.name),@action).to_sym, {:locals  => {:c => self}, :layout => prefix(@layout).to_sym})
+    r = @output || @zinc.erb(File.join(prefix(self.name),@action).to_sym, {:locals  => {:c => self}, :layout => @layout ? prefix(@layout).to_sym : @layout})
     if @cache
         # expected nginx config
         # location / {
